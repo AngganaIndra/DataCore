@@ -1,0 +1,556 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiber Cable Management</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f3f6f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #0f3d5e;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            font-size: 25px;
+        }
+
+        header p {
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 25px;
+        }
+
+        .cable-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .cable-btn {
+            border: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            transition: 0.2s;
+            text-align: left;
+        }
+
+        .cable-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .cable-btn.active {
+            background: #0f3d5e;
+            color: white;
+        }
+
+        .cable-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .cable-type {
+            margin-top: 7px;
+            font-size: 14px;
+        }
+
+        .info {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .info-box {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .info-box span {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .search {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .tube {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+        }
+
+        .tube-header {
+            background: #164e70;
+            color: white;
+            padding: 13px 18px;
+            font-weight: bold;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 11px 15px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f7f9fb;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .used {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .mapping {
+            font-weight: bold;
+            color: #0f3d5e;
+        }
+
+        .edit-btn {
+            border: none;
+            background: #e5eef5;
+            color: #0f3d5e;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background: #d2e3ef;
+        }
+
+        @media(max-width: 900px) {
+            .cable-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 600px) {
+            .cable-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Fiber Cable Management</h1>
+    <p>Monitoring & Mapping Core Fiber Optic</p>
+</header>
+
+<div class="container">
+
+    <div class="cable-buttons" id="cableButtons"></div>
+
+    <div class="info">
+
+        <h2 id="selectedCable">Kabel 1</h2>
+
+        <div class="info-grid">
+
+            <div class="info-box">
+                <span>Jenis Kabel</span>
+                <strong id="cableType">264 Core</strong>
+            </div>
+
+            <div class="info-box">
+                <span>Total Core</span>
+                <strong id="totalCore">264</strong>
+            </div>
+
+            <div class="info-box">
+                <span>Total Tube</span>
+                <strong id="totalTube">22</strong>
+            </div>
+
+            <div class="info-box">
+                <span>Core Used</span>
+                <strong id="usedCore">0</strong>
+            </div>
+
+        </div>
+
+        <input
+            type="text"
+            id="search"
+            class="search"
+            placeholder="Cari Core / Mapping, contoh: C1 atau C2"
+        >
+
+    </div>
+
+    <div id="tubeContainer"></div>
+
+</div>
+
+<script>
+
+const cables = [
+    {
+        name: "Kabel 1",
+        type: "264 Core"
+    },
+    {
+        name: "Kabel 2",
+        type: "264 Core"
+    },
+    {
+        name: "Kabel 3",
+        type: "264 Core"
+    },
+    {
+        name: "Kabel 4",
+        type: "264 Core"
+    }
+];
+
+const TOTAL_CORE = 264;
+const CORE_PER_TUBE = 12;
+
+let selectedCable = 0;
+
+/*
+    Membuat data otomatis
+    264 Core / 12 Core = 22 Tube
+*/
+
+function generateData() {
+
+    cables.forEach(cable => {
+
+        cable.tubes = [];
+
+        let coreNumber = 1;
+
+        for(let tube = 1; tube <= TOTAL_CORE / CORE_PER_TUBE; tube++) {
+
+            let tubeData = [];
+
+            for(let core = 1; core <= CORE_PER_TUBE; core++) {
+
+                tubeData.push({
+                    core: coreNumber,
+                    status: "Available",
+                    mapping: `C${coreNumber} <> C${coreNumber + 1}`
+                });
+
+                coreNumber++;
+            }
+
+            cable.tubes.push(tubeData);
+        }
+
+    });
+
+}
+
+generateData();
+
+
+function createCableButtons() {
+
+    const container = document.getElementById("cableButtons");
+
+    container.innerHTML = "";
+
+    cables.forEach((cable, index) => {
+
+        const button = document.createElement("button");
+
+        button.className =
+            "cable-btn " +
+            (index === selectedCable ? "active" : "");
+
+        button.innerHTML = `
+            <div class="cable-name">
+                ${cable.name}
+            </div>
+
+            <div class="cable-type">
+                ${cable.type}
+            </div>
+        `;
+
+        button.onclick = () => {
+
+            selectedCable = index;
+
+            createCableButtons();
+            displayCable();
+
+        };
+
+        container.appendChild(button);
+
+    });
+
+}
+
+
+function displayCable() {
+
+    const cable = cables[selectedCable];
+
+    document.getElementById("selectedCable").innerText =
+        cable.name;
+
+    document.getElementById("cableType").innerText =
+        cable.type;
+
+    document.getElementById("totalCore").innerText =
+        TOTAL_CORE;
+
+    document.getElementById("totalTube").innerText =
+        cable.tubes.length;
+
+    let used = 0;
+
+    cable.tubes.forEach(tube => {
+
+        tube.forEach(core => {
+
+            if(core.status === "Used") {
+                used++;
+            }
+
+        });
+
+    });
+
+    document.getElementById("usedCore").innerText = used;
+
+    displayTubes();
+
+}
+
+
+function displayTubes() {
+
+    const container =
+        document.getElementById("tubeContainer");
+
+    const search =
+        document.getElementById("search")
+        .value
+        .toLowerCase();
+
+    container.innerHTML = "";
+
+    const cable = cables[selectedCable];
+
+    cable.tubes.forEach((tube, tubeIndex) => {
+
+        const filtered = tube.filter(core => {
+
+            return (
+                `c${core.core}`.includes(search) ||
+                core.mapping.toLowerCase().includes(search)
+            );
+
+        });
+
+        if(filtered.length === 0) {
+            return;
+        }
+
+        const tubeElement =
+            document.createElement("div");
+
+        tubeElement.className = "tube";
+
+        tubeElement.innerHTML = `
+            <div class="tube-header">
+                TUBE ${String(tubeIndex + 1).padStart(2, "0")}
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Core</th>
+                            <th>Status</th>
+                            <th>Mapping</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${filtered.map(core => `
+
+                            <tr>
+
+                                <td>
+                                    C${core.core}
+                                </td>
+
+                                <td>
+                                    <span class="status ${
+                                        core.status === "Used"
+                                        ? "used"
+                                        : "available"
+                                    }">
+                                        ${core.status}
+                                    </span>
+                                </td>
+
+                                <td class="mapping">
+                                    ${core.mapping}
+                                </td>
+
+                                <td>
+
+                                    <button
+                                        class="edit-btn"
+                                        onclick="editCore(
+                                            ${tubeIndex},
+                                            ${core.core}
+                                        )">
+                                        Edit
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+        container.appendChild(tubeElement);
+
+    });
+
+}
+
+
+function editCore(tubeIndex, coreNumber) {
+
+    const cable = cables[selectedCable];
+
+    const core =
+        cable.tubes[tubeIndex]
+        .find(c => c.core === coreNumber);
+
+    const newMapping =
+        prompt(
+            `Mapping untuk C${coreNumber}`,
+            core.mapping
+        );
+
+    if(newMapping === null) {
+        return;
+    }
+
+    const newStatus =
+        confirm(
+            "Klik OK untuk USED\nKlik Cancel untuk AVAILABLE"
+        );
+
+    core.mapping = newMapping;
+
+    core.status =
+        newStatus
+        ? "Used"
+        : "Available";
+
+    displayCable();
+
+}
+
+
+document.getElementById("search")
+    .addEventListener("input", displayTubes);
+
+
+createCableButtons();
+displayCable();
+
+</script>
+
+</body>
+</html>
+```
